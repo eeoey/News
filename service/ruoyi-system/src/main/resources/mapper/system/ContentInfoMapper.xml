@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.ContentInfoMapper">
+
+    <resultMap type="ContentInfo" id="ContentInfoResult">
+        <result property="id"    column="id"    />
+        <result property="title"    column="title"    />
+        <result property="photoUrl"    column="photo_url"    />
+        <result property="read"    column="read"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="source"    column="source"    />
+        <result property="commentCount"    column="comment_count"    />
+        <result property="enable"    column="enable"    />
+        <result property="sort"    column="sort"    />
+        <result property="categoryId"    column="category_id"    />
+        <result property="content"    column="content"    />
+        <result property="des"    column="des"    />
+        <result property="sourceUrl"    column="source_url"    />
+        <result property="likeCount"    column="like_count"    />
+        <result property="slider"    column="slider"    />
+        <result property="userId"    column="user_id"    />
+        <result property="afterProcess"    column="after_process"    />
+        <result property="processingTime"    column="processing_time"    />
+    </resultMap>
+
+    <sql id="selectContentInfoVo">
+        select id, title, photo_url, `read`, create_time, `source`, comment_count, `enable`, sort, category_id, content, des, source_url, like_count, slider,user_id, after_process,processing_time from content_info
+    </sql>
+
+    <select id="selectContentInfoList" parameterType="ContentInfo" resultMap="ContentInfoResult">
+        <include refid="selectContentInfoVo"/>
+        <where>
+            <if test="title != null  and title != ''"> and title like concat('%', #{title},'%')</if>
+            <if test="photoUrl != null  and photoUrl != ''"> and photo_url = #{photoUrl}</if>
+            <if test="read != null "> and `read` = #{read}</if>
+            <if test="source != null  and `source` != ''"> and source like Concat('%', #{source} ,'%')</if>
+            <if test="commentCount != null "> and comment_count = #{commentCount}</if>
+            <if test="enable != null "> and `enable` = #{enable}</if>
+            <if test="sort != null "> and sort = #{sort}</if>
+            <if test="categoryId != null "> and category_id = #{categoryId}</if>
+            <if test="content != null  and content != ''"> and content = #{content}</if>
+            <if test="des != null  and des != ''"> and des = #{des}</if>
+            <if test="sourceUrl != null  and sourceUrl != ''"> and source_url = #{sourceUrl}</if>
+            <if test="likeCount != null "> and like_count = #{likeCount}</if>
+            <if test="slider != null "> and slider = #{slider}</if>
+            <if test="userId != null "> and user_id = #{userId}</if>
+            <if test="afterProcess != null "> and after_process = #{afterProcess}</if>
+        </where>
+        order by create_time desc
+    </select>
+
+    <select id="searchByKeyword" resultMap="ContentInfoResult" >
+        <include refid="selectContentInfoVo"/>
+        where id in (
+        select c.id
+        from content_info c
+        left join category_info i on c.category_id = i.id
+        where content like concat('%', #{keyword}, '%')
+        or title like concat('%',  #{keyword}, '%')
+        or des like concat('%',  #{keyword}, '%')
+        or i.name like concat('%',  #{keyword}, '%')
+        or source like concat('%',  #{keyword}, '%')
+        )
+    </select>
+
+    <select id="selectContentInfoById" parameterType="Long" resultMap="ContentInfoResult">
+        <include refid="selectContentInfoVo"/>
+        where id = #{id}
+    </select>
+    <select id="recommend" parameterType="Long" resultMap="ContentInfoResult">
+        select distinct id,
+               title,
+               photo_url,
+               `read`,
+               create_time,
+               source,
+               comment_count,
+               enable,
+               sort,
+               c.category_id,
+               content,
+               des,
+               source_url,
+               like_count,
+               slider
+        from content_info c
+                 left join
+             (
+                 select c.id as articleId, c.category_id
+                 from user_collect_info uci
+                          left join content_info c on uci.c_id = c.id
+                 where uci.user_id = #{userId}
+                   and uci.type in ('1', '2')
+                 union all
+                 select c2.id as articleId, c2.category_id
+                 from user_collect_info uci2
+                          left join comment_info c1 on uci2.c_id = c1.id
+                          left join content_info c2 on c2.id = c1.c_id
+                 where uci2.user_id = #{userId}
+                   and uci2.type in ('3', '4')
+             ) c1
+             on c.category_id = c1.category_id and c.id != c1.articleId
+        order by rand()
+    </select>
+    <insert id="insertContentInfo" parameterType="ContentInfo" useGeneratedKeys="true" keyProperty="id">
+        insert into content_info
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="title != null">title,</if>
+            <if test="photoUrl != null">photo_url,</if>
+            <if test="read != null">`read`,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="source != null">`source`,</if>
+            <if test="commentCount != null">comment_count,</if>
+            <if test="enable != null">`enable`,</if>
+            <if test="sort != null">sort,</if>
+            <if test="categoryId != null">category_id,</if>
+            <if test="content != null">content,</if>
+            <if test="des != null">des,</if>
+            <if test="sourceUrl != null">source_url,</if>
+            <if test="likeCount != null">like_count,</if>
+            <if test="slider != null">slider,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="afterProcess != null">after_process,</if>
+            <if test="processingTime != null">processing_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="title != null">#{title},</if>
+            <if test="photoUrl != null">#{photoUrl},</if>
+            <if test="read != null">#{read},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="source != null">#{source},</if>
+            <if test="commentCount != null">#{commentCount},</if>
+            <if test="enable != null">#{enable},</if>
+            <if test="sort != null">#{sort},</if>
+            <if test="categoryId != null">#{categoryId},</if>
+            <if test="content != null">#{content},</if>
+            <if test="des != null">#{des},</if>
+            <if test="sourceUrl != null">#{sourceUrl},</if>
+            <if test="likeCount != null">#{likeCount},</if>
+            <if test="slider != null">#{slider},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="afterProcess != null">#{afterProcess},</if>
+            <if test="processingTime != null">processing_time = #{processingTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateContentInfo" parameterType="ContentInfo">
+        update content_info
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="title != null">title = #{title},</if>
+            <if test="photoUrl != null">photo_url = #{photoUrl},</if>
+            <if test="read != null">`read` = #{read},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="source != null">`source` = #{source},</if>
+            <if test="commentCount != null">comment_count = #{commentCount},</if>
+            <if test="enable != null">`enable` = #{enable},</if>
+            <if test="sort != null">sort = #{sort},</if>
+            <if test="categoryId != null">category_id = #{categoryId},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="des != null">des = #{des},</if>
+            <if test="sourceUrl != null">source_url = #{sourceUrl},</if>
+            <if test="likeCount != null">like_count = #{likeCount},</if>
+            <if test="slider != null">slider = #{slider},</if>
+            <if test="afterProcess != null">after_process = #{afterProcess},</if>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="processingTime != null">processing_time = #{processingTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteContentInfoById" parameterType="Long">
+        delete from content_info where id = #{id}
+    </delete>
+
+    <delete id="deleteContentInfoByIds" parameterType="String">
+        delete from content_info where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>

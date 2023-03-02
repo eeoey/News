@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.CategoryInfoMapper">
+
+    <resultMap type="CategoryInfo" id="CategoryInfoResult">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="enable" column="enable"/>
+        <result property="sort" column="sort"/>
+        <result property="createTime" column="create_time"/>
+        <result property="isQuery" column="is_query"/>
+        <result property="queryUrl" column="query_url"/>
+    </resultMap>
+
+    <sql id="selectCategoryInfoVo">
+        select id, name, enable, sort, create_time, is_query, query_url
+        from category_info
+    </sql>
+
+    <select id="selectCategoryInfoList" parameterType="CategoryInfo" resultMap="CategoryInfoResult">
+        <include refid="selectCategoryInfoVo"/>
+        <where>
+            <if test="name != null  and name != ''">and name like concat('%', #{name}, '%')</if>
+            <if test="enable != null ">and enable = #{enable}</if>
+            <if test="sort != null ">and sort = #{sort}</if>
+            <if test="isQuery != null">and is_query = #{isQuery}</if>
+        </where>
+
+    </select>
+
+    <select id="selectCategoryInfoById" parameterType="Long" resultMap="CategoryInfoResult">
+        <include refid="selectCategoryInfoVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertCategoryInfo" parameterType="CategoryInfo" useGeneratedKeys="true" keyProperty="id">
+        insert into category_info
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null">name,</if>
+            <if test="enable != null">enable,</if>
+            <if test="sort != null">sort,</if>
+            <if test="createTime != null">create_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null">#{name},</if>
+            <if test="enable != null">#{enable},</if>
+            <if test="sort != null">#{sort},</if>
+            <if test="createTime != null">#{createTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateCategoryInfo" parameterType="CategoryInfo">
+        update category_info
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null">name = #{name},</if>
+            <if test="enable != null">enable = #{enable},</if>
+            <if test="sort != null">sort = #{sort},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCategoryInfoById" parameterType="Long">
+        delete
+        from category_info
+        where id = #{id}
+    </delete>
+
+    <delete id="deleteCategoryInfoByIds" parameterType="String">
+        delete from category_info where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>

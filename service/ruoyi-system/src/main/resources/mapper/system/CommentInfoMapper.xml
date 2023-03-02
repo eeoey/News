@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.CommentInfoMapper">
+    
+    <resultMap type="CommentInfo" id="CommentInfoResult">
+        <result property="id"    column="id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="content"    column="content"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="replyCount"    column="reply_count"    />
+        <result property="likeCount"    column="like_count"    />
+        <result property="pid"    column="pid"    />
+        <result property="cId"    column="c_id"    />
+    </resultMap>
+    <resultMap type="com.ruoyi.system.vo.CommentVO" id="CommentVOResult">
+        <result property="id"    column="id"    />
+        <result property="userId"    column="user_id"    />
+        <result property="content"    column="content"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="replyCount"    column="reply_count"    />
+        <result property="likeCount"    column="like_count"    />
+        <result property="pid"    column="pid"    />
+        <result property="cId"    column="cid"    />
+        <result property="nickname"    column="nickname"    />
+        <result property="avatarUrl"    column="avatar_url"    />
+    </resultMap>
+    <sql id="selectCommentInfoVo">
+        select id, user_id, content, create_time, reply_count, like_count, pid, c_id from comment_info
+    </sql>
+
+    <select id="selectCommentInfoList" parameterType="CommentInfo" resultMap="CommentInfoResult">
+        <include refid="selectCommentInfoVo"/>
+        <where>  
+            <if test="userId != null "> and user_id = #{userId}</if>
+            <if test="content != null  and content != ''"> and content = #{content}</if>
+            <if test="replyCount != null "> and reply_count = #{replyCount}</if>
+            <if test="likeCount != null "> and like_count = #{likeCount}</if>
+            <if test="pid != null "> and pid = #{pid}</if>
+            <if test="cId != null "> and c_id = #{cId}</if>
+        </where>
+    </select>
+    <select id="selectCommentVoByIdAndUserId"  resultMap="CommentVOResult">
+        SELECT
+        c.*,u.nickname,
+        u.avatar_url
+        <if test="null !=userId and userId!=''">
+            , IF (uc.id IS NULL, 0, 1) is_like
+        </if>
+        FROM
+        comment_info c
+        LEFT JOIN user_info u ON c.user_id = u.id
+        <if test="null !=userId and userId!=''">
+            LEFT JOIN user_collect_info uc ON c.id = uc.c_id AND type = 4  and uc.user_id=#{userId}
+        </if>
+        where pid is null and c.id=#{id}
+        order by create_time asc
+    </select>
+    <select id="getList"  resultMap="CommentVOResult">
+        SELECT
+        c.*,u.nickname,
+        u.avatar_url
+        <if test="null !=userId and userId!=''">
+            , IF (uc.id IS NULL, 0, 1) is_like
+        </if>
+        FROM
+        comment_info c
+        LEFT JOIN user_info u ON c.user_id = u.id
+        <if test="null !=userId and userId!=''">
+            LEFT JOIN user_collect_info uc ON c.id = uc.c_id AND type = 4 and uc.user_id=#{userId}
+        </if>
+        where pid is null and c.c_id=#{cid}
+        order by create_time asc
+    </select>
+    <select id="getDetailList"  resultMap="CommentVOResult">
+        SELECT
+        c.*,u.nickname,
+        u.avatar_url,
+        u1.nickname parent_nickname
+        <if test="null !=userId and userId!=''">
+            , IF (uc.id IS NULL, 0, 1) is_like
+        </if>
+        FROM
+        comment_info c
+        LEFT JOIN user_info u ON c.user_id = u.id
+        LEFT JOIN comment_info c1 ON c.pid = c1.id
+        LEFT JOIN user_info u1 ON c1.user_id = u1.id
+        <if test="null !=userId and userId!=''">
+            LEFT JOIN user_collect_info uc ON c.id = uc.c_id AND type = 4  and uc.user_id=#{userId}
+        </if>
+        where c.pid=#{id} order by create_time asc
+    </select>
+    <select id="selectCommentInfoById" parameterType="Long" resultMap="CommentInfoResult">
+        <include refid="selectCommentInfoVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertCommentInfo" parameterType="CommentInfo" useGeneratedKeys="true" keyProperty="id">
+        insert into comment_info
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">user_id,</if>
+            <if test="content != null">content,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="replyCount != null">reply_count,</if>
+            <if test="likeCount != null">like_count,</if>
+            <if test="pid != null">pid,</if>
+            <if test="cId != null">c_id,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="content != null">#{content},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="replyCount != null">#{replyCount},</if>
+            <if test="likeCount != null">#{likeCount},</if>
+            <if test="pid != null">#{pid},</if>
+            <if test="cId != null">#{cId},</if>
+         </trim>
+    </insert>
+
+    <update id="updateCommentInfo" parameterType="CommentInfo">
+        update comment_info
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="replyCount != null">reply_count = #{replyCount},</if>
+            <if test="likeCount != null">like_count = #{likeCount},</if>
+            <if test="pid != null">pid = #{pid},</if>
+            <if test="cId != null">c_id = #{cId},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCommentInfoById" parameterType="Long">
+        delete from comment_info where id = #{id}
+    </delete>
+
+    <delete id="deleteCommentInfoByIds" parameterType="String">
+        delete from comment_info where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+</mapper>
